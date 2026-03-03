@@ -1,4 +1,6 @@
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { DebateEvent } from "@/lib/types";
 import { UNIVERSITIES } from "@/lib/universities";
 
@@ -22,8 +24,10 @@ export default function AgentBubble({ event }: AgentBubbleProps) {
         </span>
         <span className="text-xs text-gray-400">Round {event.round}</span>
       </div>
-      <div className="prose prose-sm max-w-none text-sm leading-relaxed">
-        <Markdown>{event.content}</Markdown>
+      <div className="prose prose-sm max-w-none text-sm leading-relaxed overflow-x-auto">
+        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+          {event.content}
+        </Markdown>
       </div>
       {event.sources.length > 0 && (
         <div className="mt-2 text-xs text-gray-500">
