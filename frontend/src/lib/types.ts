@@ -29,7 +29,7 @@ export interface DebateSession {
 export interface DebateEvent {
   agent: string;
   content: string;
-  round: number;
+  round: number | string;
   sources: string[];
 }
 
@@ -38,3 +38,5 @@ export interface University {
   fullName: string;
   color: string;
 }
+
+export type ProsConsData = Record<string, { pros: string[]; cons: string[] }>;

@@ -20,6 +20,9 @@ export default function DebatePage({ params }: { params: Promise<{ id: string }>
           New debate
         </Link>
       </header>
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-800">
+        UniCompass is a decision-support tool. Always verify information with official university sources.
+      </div>
       <DebateStream sessionId={id} />
     </main>
   );

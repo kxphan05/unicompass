@@ -17,6 +17,9 @@ export default function Home() {
         >
           Get Started
         </Link>
+        <p className="mt-4 text-xs text-gray-400">
+          UniCompass is a decision-support tool. Always verify information with official university sources.
+        </p>
       </div>
     </main>
   );

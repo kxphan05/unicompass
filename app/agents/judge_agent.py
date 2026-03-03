@@ -1,4 +1,6 @@
+import json
 import os
+import re
 
 import httpx
 
@@ -27,7 +29,15 @@ Your job:
 3. Give a personalized recommendation — which university is the best fit and why.
 4. Note any claims that seemed unsupported or exaggerated.
 
-Be concise but thorough (300-400 words). Use bullet points for clarity."""
+Be concise but thorough (300-400 words). Use bullet points for clarity.
+
+IMPORTANT: After your prose summary, you MUST append a fenced JSON block with structured pros and cons for each university discussed. Use exactly this format:
+
+```json
+{{"pros_cons": {{"UniversityKey": {{"pros": ["pro 1", "pro 2"], "cons": ["con 1", "con 2"]}}, ...}}}}
+```
+
+Replace "UniversityKey" with the actual university abbreviation (e.g. NUS, NTU). Include 2-4 pros and 2-4 cons per university based on the debate."""
 
 
 async def judge_summarize(profile: StudentProfile, debate_history: str) -> str:
@@ -61,3 +71,20 @@ Now provide your objective summary and recommendation."""
         data = response.json()
 
     return data["choices"][0]["message"]["content"]
+
+
+def parse_pros_cons(summary: str) -> dict | None:
+    """Extract the JSON pros_cons block from the Judge's response."""
+    match = re.search(r"```json\s*(\{.*\})\s*```", summary, re.DOTALL)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(1))
+        return data.get("pros_cons")
+    except (json.JSONDecodeError, AttributeError):
+        return None
+
+
+def strip_json_block(summary: str) -> str:
+    """Remove the fenced JSON block from the Judge's response for display."""
+    return re.sub(r"\s*```json\s*\{.*\}\s*```\s*", "", summary, flags=re.DOTALL).strip()

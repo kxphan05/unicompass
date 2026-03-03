@@ -1,4 +1,4 @@
-import { StudentProfile, StudentProfileResponse, DebateSession, DebateEvent } from "./types";
+import { StudentProfile, StudentProfileResponse, DebateSession, DebateEvent, ProsConsData } from "./types";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -44,6 +44,7 @@ export function streamDebate(
   onDone: () => void,
   onError: (error: Error) => void,
   onWaitForNext?: () => void,
+  onProsCons?: (data: ProsConsData) => void,
 ): { abort: () => void } {
   const controller = new AbortController();
 
@@ -88,6 +89,15 @@ export function streamDebate(
             }
             if (currentEvent === "wait_for_next") {
               onWaitForNext?.();
+              currentEvent = "";
+              continue;
+            }
+            if (currentEvent === "pros_cons") {
+              try {
+                onProsCons?.(JSON.parse(data));
+              } catch {
+                // skip malformed pros_cons JSON
+              }
               currentEvent = "";
               continue;
             }

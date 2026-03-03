@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
+from app.agents.judge_agent import parse_pros_cons, strip_json_block
 from app.agents.orchestrator import run_debate
 from app.agents.registry import REGISTRY
 from app.db.models import DebateCreate, DebateSession, QuestionRequest, StudentProfile
@@ -11,6 +12,7 @@ from app.db.supabase_client import (
     add_message,
     create_debate,
     get_debate,
+    get_messages,
     get_profile,
     update_debate_status,
 )
@@ -81,11 +83,21 @@ async def stream_debate(session_id: str):
                     }
                     continue
 
-                # Persist message to Supabase
+                content = event["content"]
+                is_judge = event["agent"] == "Judge"
+
+                # For Judge messages, parse and strip the JSON pros/cons block
+                pros_cons = None
+                if is_judge:
+                    pros_cons = parse_pros_cons(content)
+                    content = strip_json_block(content)
+                    event["content"] = content
+
+                # Persist message to Supabase (with JSON block stripped)
                 add_message(
                     debate_id=session_id,
                     agent=event["agent"],
-                    content=event["content"],
+                    content=content,
                     round=event["round"],
                     sources=event["sources"],
                 )
@@ -94,6 +106,13 @@ async def stream_debate(session_id: str):
                     "event": "message",
                     "data": json.dumps(event),
                 }
+
+                # Emit pros_cons as a separate SSE event after the Judge message
+                if pros_cons:
+                    yield {
+                        "event": "pros_cons",
+                        "data": json.dumps(pros_cons),
+                    }
 
             # Debate completed — extract judge summary
             summary = event["content"] if event["agent"] == "Judge" else None
@@ -122,6 +141,24 @@ async def next_round(session_id: str):
         )
     event.set()
     return {"status": "proceeding"}
+
+
+@router.get("/{session_id}/summary")
+async def debate_summary(session_id: str):
+    debate_row = get_debate(session_id)
+    if debate_row is None:
+        raise HTTPException(status_code=404, detail="Debate not found")
+    if debate_row.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="Debate is not completed yet")
+
+    messages = get_messages(session_id)
+    return {
+        "id": debate_row["id"],
+        "status": debate_row["status"],
+        "agents": debate_row["agents"],
+        "summary": debate_row.get("summary"),
+        "messages": messages,
+    }
 
 
 @router.post("/{session_id}/question")

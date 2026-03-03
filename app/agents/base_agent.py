@@ -93,7 +93,15 @@ INSTRUCTIONS:
 
         system_prompt = self.get_system_prompt(profile, history, scraped)
 
-        user_message = f"""Round type: {round_type}
+        if round_type == "answer":
+            user_message = (
+                "A student has asked a question (see the end of the debate history). "
+                "Answer it directly and concisely from your university's perspective. "
+                "Back claims with evidence from the scraped data and cite source URLs. "
+                "Keep your response under 150 words."
+            )
+        else:
+            user_message = f"""Round type: {round_type}
 
 Now deliver your {round_type}. Back every claim with evidence from the scraped data and cite the source URLs."""
 
