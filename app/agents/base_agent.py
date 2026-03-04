@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from app.db.models import StudentProfile
+from app.db.supabase_client import get_scholarships
 from app.tools.scraper import scrape_page
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -18,10 +19,33 @@ class BaseUniversityAgent:
     seed_urls: list[str] = field(default_factory=list)
     color: str = "#000000"
 
+    def _get_scholarship_context(self, profile: StudentProfile) -> str:
+        """Fetch scholarships for this university and the student's citizenship."""
+        try:
+            scholarships = get_scholarships(
+                university=self.university,
+                citizenship=profile.citizenship if profile.citizenship else None,
+            )
+        except Exception:
+            return ""
+        if not scholarships:
+            return ""
+        lines = []
+        for s in scholarships:
+            bond = f"Bond: {s['bond_years']} years" if s.get("bond_years") else "No bond"
+            notes = f" {s['notes']}" if s.get("notes") else ""
+            lines.append(f"- {s['name']} — {bond}.{notes}")
+        return (
+            f"\nScholarships at {self.full_name} available to {profile.citizenship} students:\n"
+            + "\n".join(lines)
+            + "\n"
+        )
+
     def get_system_prompt(
         self, profile: StudentProfile, history: str, scraped: str,
     ) -> str:
         grades = ", ".join(f"{k}: {v}" for k, v in profile.alevel.items())
+        scholarship_context = self._get_scholarship_context(profile)
 
         return f"""You are the official ambassador for {self.full_name} ({self.university}).
 You ONLY represent {self.university}. You must NEVER argue for any other university.
@@ -39,7 +63,7 @@ Student profile:
 - Citizenship: {profile.citizenship}
 - Additional comments: {profile.additional_comments if profile.additional_comments else 'None provided'}
 - Resume: {profile.resume_text if profile.resume_text else 'Not provided'}
-
+{scholarship_context}
 Live data from {self.website} (YOUR university's data — use this as your primary evidence):
 {scraped if scraped else '(Scraping unavailable — use your general knowledge of ' + self.full_name + ')'}
 

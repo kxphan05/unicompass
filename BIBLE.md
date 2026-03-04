@@ -1,7 +1,7 @@
 # UniCompass — Project Bible
 
-**Version:** 0.6 — Debate UX Polish
-**Last updated:** 2026-03-03
+**Version:** 0.7 — Scholarship Frontend
+**Last updated:** 2026-03-04
 
 ---
 
@@ -145,7 +145,7 @@ frontend/src/
 | 4.1 | Parallel agent calls + context scaling | ✅ Done |
 | 5 | Deployment (Fly.io + Vercel + CI/CD) | ✅ Done |
 | 6 | Debate UX polish (pros/cons, transcript export, disclaimer, Q&A) | ✅ Done |
-| **7** | **Scholarship frontend + comparison** | **🔲 Planned** |
+| 7 | Scholarship frontend + comparison | ✅ Done |
 | **8** | **Profile CRUD + debate history** | **🔲 Planned** |
 | **9** | **Authentication (Supabase Auth)** | **🔲 Planned** |
 | **10** | **Mobile responsiveness + QA** | **🔲 Planned** |
@@ -253,24 +253,37 @@ Students can ask questions between rounds. Agents answer directly without advanc
 
 ---
 
-## Step 7 — Scholarship Frontend + Comparison (Planned)
+## Step 7 — Scholarship Frontend + Comparison (Done)
 
 **Goal:** Expose the existing scholarships API in the frontend. PRD refs: S2, S3, S4, S6.
 
-### 7.1 Scholarship Browsing Page
+### 7.1 Scholarship Browsing Page ✅
 
-- New page: `frontend/src/app/scholarships/page.tsx`
-- Filters: university dropdown, citizenship dropdown
-- Calls `GET /api/scholarships?university=X&citizenship=Y`
-- Renders a card grid with scholarship name, university, bond years, link to official page
+New page: `frontend/src/app/scholarships/page.tsx` (Client Component)
+- Filters: university dropdown (all 6 universities), citizenship dropdown (All, Singaporean, PR, International)
+- Calls `GET /api/scholarships?university=X&citizenship=Y` via `getScholarships()` API function
+- Renders scholarships in a responsive card grid (1 col mobile → 3 cols desktop)
+- Each card displays: name, university (color-coded badge), bond years, citizenship tags, notes, official link
+- Checkboxes allow selecting up to 4 scholarships for comparison (disabled when max reached)
+- Sticky "Compare (N)" button appears at bottom when 2+ selected
 
-### 7.2 Scholarship Comparison
+### 7.2 Scholarship Comparison ✅
 
-- Allow selecting up to 4 scholarships for side-by-side comparison
-- New component: `frontend/src/components/ScholarshipCompare.tsx`
-- Table columns: name, university, bond years, citizenship eligibility, link
+New component: `frontend/src/components/ScholarshipCompare.tsx` (Client Component)
+- Side-by-side table view of up to 4 selected scholarships
+- Table rows: Field name (leftmost), then one column per scholarship
+- Columns: name (header), university (color badge), bond years, citizenship (tags), notes, link (official page)
+- Horizontally scrollable for mobile/tablet
+- "Clear comparison" button to reset selection
+- Renders above the card grid when 2+ scholarships selected
 
-### 7.3 Scholarship Context in Debates
+**Frontend types** (`frontend/src/lib/types.ts`):
+- `Scholarship` interface: id, university, name, bond_years, citizenship (array), url, notes
+
+**Frontend API** (`frontend/src/lib/api.ts`):
+- `getScholarships(university?, citizenship?)` — calls `/api/scholarships` with optional query params
+
+### 7.3 Scholarship Context in Debates (Planned)
 
 - Inject relevant scholarships into agent system prompts so agents can reference them
 - `app/agents/base_agent.py` — in `get_system_prompt()`, query `get_scholarships(university=self.university, citizenship=profile.citizenship)` and append to the prompt

@@ -40,3 +40,15 @@ export interface University {
 }
 
 export type ProsConsData = Record<string, { pros: string[]; cons: string[] }>;
+
+export interface Scholarship {
+  id: string;
+  university: string;
+  name: string;
+  bond_years: number | null;
+  citizenship: string[];
+  url: string;
+  notes: string;
+  eligibility?: string;
+  benefits?: string;
+}

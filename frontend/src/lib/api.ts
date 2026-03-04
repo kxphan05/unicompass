@@ -1,4 +1,4 @@
-import { StudentProfile, StudentProfileResponse, DebateSession, DebateEvent, ProsConsData } from "./types";
+import { StudentProfile, StudentProfileResponse, DebateSession, DebateEvent, ProsConsData, Scholarship } from "./types";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -128,6 +128,20 @@ export async function nextRound(sessionId: string): Promise<void> {
     method: "POST",
   });
   if (!res.ok) throw new Error(`Failed to advance round: ${res.status}`);
+}
+
+export async function getScholarships(
+  university?: string,
+  citizenship?: string,
+): Promise<Scholarship[]> {
+  const params = new URLSearchParams();
+  if (university) params.set("university", university);
+  if (citizenship) params.set("citizenship", citizenship);
+  const qs = params.toString();
+  const res = await fetch(`${API}/api/scholarships${qs ? `?${qs}` : ""}`);
+  if (!res.ok) throw new Error(`Failed to fetch scholarships: ${res.status}`);
+  const json = await res.json();
+  return json.data;
 }
 
 export async function injectQuestion(sessionId: string, content: string): Promise<void> {
