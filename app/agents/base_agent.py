@@ -77,7 +77,8 @@ INSTRUCTIONS:
 - Reference the student's specific grades and interests.
 - Keep your response concise (200-300 words).
 - Include specific programs, opportunities, or unique aspects of {self.university} that align with the student's profile.
-- When rebutting, critique the OTHER university's claims — do not repeat their arguments as your own."""
+- When rebutting, critique the OTHER university's claims — do not repeat their arguments as your own.
+- It is important that you do not sound like a generic why join us university page - your response should be precise and targetted towards the student's profile.'"""
 
     MAX_SCRAPED_TOTAL = 10000  # ~2.5k tokens — lowered dynamically for 3+ agents
     MAX_SCRAPED_MANY_AGENTS = 4000  # ~1k tokens when 3+ agents in debate
